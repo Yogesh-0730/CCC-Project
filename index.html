@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Resource Allocation System | Luxury Investment Planner</title>
+  <meta
+    name="description"
+    content="Database-backed investment planner comparing Greedy Fractional and DP 0/1 Knapsack with charts and DSA traces."
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <div class="bg-layer"></div>
+  <div class="metal-shapes">
+    <span class="metal-shape shape-gold"></span>
+    <span class="metal-shape shape-silver"></span>
+    <span class="metal-shape shape-platinum"></span>
+  </div>
+
+  <main class="app-shell">
+    <header class="hero-card tilt-card">
+      <p class="eyebrow">Smart Resource Allocation System</p>
+      <h1>Luxury Investment Planner</h1>
+      <p class="subtext">
+        Full-stack analytical planner with <strong>Python backend</strong>, <strong>JSON database</strong>,
+        and DSA-focused explainability for <strong>Greedy Fractional</strong> and <strong>DP 0/1 Knapsack</strong>.
+      </p>
+      <div class="hero-tags">
+        <span>Database + API + Dashboard</span>
+        <span>Option 1: Fractional Greedy</span>
+        <span>Option 2: DP 0/1</span>
+        <span>Option 3: Compare</span>
+      </div>
+    </header>
+
+    <section class="grid-layout controls-layout">
+      <article class="panel tilt-card">
+        <h2>Run Analysis</h2>
+        <div class="field">
+          <label for="budgetInput">Total Budget (INR)</label>
+          <input id="budgetInput" type="text" value="50000" placeholder="e.g. 50000 or 50k" />
+        </div>
+        <div class="field">
+          <label for="modeSelect">Run Mode</label>
+          <select id="modeSelect">
+            <option value="fractional">Option 1: Greedy Fractional</option>
+            <option value="dp01">Option 2: DP 0/1 Dynamic Programming</option>
+            <option value="compare" selected>Option 3: Compare Both</option>
+            <option value="insights">Insights Only (No Run Log)</option>
+          </select>
+        </div>
+        <p class="helper">Money parser accepts values like <code>10k</code>, <code>2l</code>, and <code>1cr</code>.</p>
+        <button id="runBtn" class="run-btn">Run Allocation Analysis</button>
+      </article>
+
+      <article class="panel tilt-card">
+        <h2>Manage Database Options</h2>
+        <div class="field">
+          <label for="nameInput">Option Name</label>
+          <input id="nameInput" type="text" placeholder="e.g. Renewable Alpha Fund" />
+        </div>
+        <div class="field">
+          <label for="costInput">Required Amount (INR)</label>
+          <input id="costInput" type="text" placeholder="e.g. 10000 or 10k" />
+        </div>
+        <div class="field">
+          <label for="returnInput">Expected Return (INR)</label>
+          <input id="returnInput" type="text" placeholder="e.g. 15000 or 15k" />
+        </div>
+        <div class="button-row">
+          <button id="addBtn" class="ghost-btn">Save Option to DB</button>
+          <button id="resetBtn" class="text-btn">Reset Sample Data</button>
+        </div>
+      </article>
+    </section>
+
+    <section id="kpiGrid" class="kpi-grid">
+      <article class="kpi-card tilt-card">
+        <p class="kpi-label">Budget Coverage</p>
+        <p id="metricCoverage" class="kpi-value">-</p>
+      </article>
+      <article class="kpi-card tilt-card">
+        <p class="kpi-label">Portfolio Potential</p>
+        <p id="metricPotential" class="kpi-value">-</p>
+      </article>
+      <article class="kpi-card tilt-card">
+        <p class="kpi-label">Average ROI</p>
+        <p id="metricAvgRoi" class="kpi-value">-</p>
+      </article>
+      <article class="kpi-card tilt-card">
+        <p class="kpi-label">Top Option</p>
+        <p id="metricBest" class="kpi-value">-</p>
+      </article>
+      <article class="kpi-card tilt-card">
+        <p class="kpi-label">Winning Method</p>
+        <p id="metricWinner" class="kpi-value">-</p>
+      </article>
+      <article class="kpi-card tilt-card">
+        <p class="kpi-label">Overbook Ratio</p>
+        <p id="metricOverbook" class="kpi-value">-</p>
+      </article>
+    </section>
+
+    <section class="panel table-panel morph-card">
+      <div class="section-head">
+        <h2>Investment Options (Database Table)</h2>
+        <p class="muted">Persistent database records used for every algorithm run.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Required</th>
+              <th>Expected Return</th>
+              <th>Ratio</th>
+              <th>ROI</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="optionsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="resultSection" class="results-grid"></section>
+
+    <section class="panel chart-panel morph-card">
+      <div class="section-head">
+        <h2>Diagrammatic Representations</h2>
+        <p class="muted">Pie, bar, radar, and DP curve charts for richer interpretation.</p>
+      </div>
+      <div class="chart-grid">
+        <article class="chart-card"><h3>Cost Distribution Pie</h3><canvas id="costPieChart"></canvas></article>
+        <article class="chart-card"><h3>Return Distribution Pie</h3><canvas id="returnPieChart"></canvas></article>
+        <article class="chart-card"><h3>Ratio Comparison Bar</h3><canvas id="ratioBarChart"></canvas></article>
+        <article class="chart-card"><h3>Method Return Bar</h3><canvas id="methodReturnChart"></canvas></article>
+        <article class="chart-card"><h3>Method Quality Radar</h3><canvas id="methodRadarChart"></canvas></article>
+        <article class="chart-card"><h3>DP Value Curve</h3><canvas id="dpCurveChart"></canvas></article>
+      </div>
+      <div id="allocationPieGrid" class="allocation-grid"></div>
+    </section>
+
+    <section class="panel info-panel morph-card">
+      <div class="section-head">
+        <h2>Detailed DSA Insights</h2>
+        <p class="muted">Trace tables to understand algorithm decisions step-by-step.</p>
+      </div>
+
+      <div class="guide-grid">
+        <article class="guide-card">
+          <h3 id="fractionalGuideTitle">Greedy Fractional Knapsack</h3>
+          <p id="fractionalGuideText" class="muted">-</p>
+          <p id="fractionalGuideComplexity" class="muted">-</p>
+        </article>
+        <article class="guide-card">
+          <h3 id="dpGuideTitle">DP 0/1 Knapsack</h3>
+          <p id="dpGuideText" class="muted">-</p>
+          <p id="dpGuideComplexity" class="muted">-</p>
+          <p id="dpGuideScale" class="muted">-</p>
+        </article>
+      </div>
+
+      <div class="table-stack">
+        <h3>Option Performance Table</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Ratio</th>
+                <th>ROI</th>
+                <th>Cost Share</th>
+                <th>Budget Pressure</th>
+              </tr>
+            </thead>
+            <tbody id="optionPerfBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-stack">
+        <h3>Method Performance Table</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Total Return</th>
+                <th>Budget Used</th>
+                <th>Budget Left</th>
+                <th>Utilization</th>
+                <th>ROI</th>
+                <th>Selections</th>
+              </tr>
+            </thead>
+            <tbody id="methodPerfBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="trace-grid">
+        <article class="table-stack">
+          <h3>Greedy Fractional Trace</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Step</th>
+                  <th>Option</th>
+                  <th>Ratio</th>
+                  <th>Fraction</th>
+                  <th>Invested</th>
+                  <th>Gained</th>
+                  <th>Remaining</th>
+                </tr>
+              </thead>
+              <tbody id="fractionalTraceBody"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="table-stack">
+          <h3>DP 0/1 Trace</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Step</th>
+                  <th>Option</th>
+                  <th>Scaled Cost</th>
+                  <th>Selected</th>
+                  <th>Original Cost</th>
+                  <th>Original Return</th>
+                </tr>
+              </thead>
+              <tbody id="dpTraceBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel table-panel morph-card">
+      <div class="section-head">
+        <h2>Analysis History (Database Log)</h2>
+        <p class="muted">Every run is recorded so you can compare decisions over time.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Run Time</th>
+              <th>Mode</th>
+              <th>Budget</th>
+              <th>Options</th>
+              <th>Fractional Return</th>
+              <th>DP Return</th>
+              <th>Winner</th>
+              <th>Utilization</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <template id="allocationTemplate">
+    <article class="result-card tilt-card">
+      <h3 class="title"></h3>
+      <p class="total-return"></p>
+      <p class="budget-used"></p>
+      <p class="leftover"></p>
+      <p class="strategy-roi"></p>
+      <p class="selection-count"></p>
+      <p class="note"></p>
+      <div class="chips"></div>
+    </article>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

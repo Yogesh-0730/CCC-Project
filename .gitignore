@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local database artifacts
+*.db
+*.db-journal
+
+# Optional generated data
+data/planner_db.json
